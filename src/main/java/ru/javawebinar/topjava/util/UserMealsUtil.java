@@ -42,8 +42,8 @@ public class UserMealsUtil {
 
         List<UserMealWithExcess> result = new ArrayList<>();
         for (UserMeal meal : meals) {
-            if (ru.javawebinar.topjava.util.TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
-                boolean isExcess = dateCalories.getOrDefault(meal.getDateTime().toLocalDate(), 0) > caloriesPerDay;
+            if (TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
+                boolean isExcess = dateCalories.get(meal.getDateTime().toLocalDate()) > caloriesPerDay;
                 result.add(new UserMealWithExcess(meal.getDateTime(), meal.getDescription(), meal.getCalories(), isExcess));
             }
         }
@@ -51,48 +51,13 @@ public class UserMealsUtil {
     }
 
     public static List<UserMealWithExcess> filteredByStreams(List<UserMeal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
-        final Map<LocalDate, Integer> dateCalories = meals.stream().collect( new sumCollector());
+        final Map<LocalDate, Integer> dateCalories = meals.stream().collect(Collectors.groupingBy(UserMeal::getLocalDate, Collectors.summingInt(UserMeal::getCalories)));
 
         return meals.stream()
-                .filter(i -> ru.javawebinar.topjava.util.TimeUtil.isBetweenHalfOpen(i.getDateTime().toLocalTime(), startTime, endTime))
+                .filter(i -> TimeUtil.isBetweenHalfOpen(i.getDateTime().toLocalTime(), startTime, endTime))
                 .map(i -> {
-                    boolean isExcess = dateCalories.getOrDefault(i.getDateTime().toLocalDate(), 0) > caloriesPerDay;
+                    boolean isExcess = dateCalories.get(i.getDateTime().toLocalDate()) > caloriesPerDay;
                     return new UserMealWithExcess(i.getDateTime(), i.getDescription(), i.getCalories(), isExcess);
                 }).collect(Collectors.toList());
-    }
-
-    static class sumCollector implements Collector<UserMeal, Map<LocalDate, Integer>, Map<LocalDate, Integer>> {
-
-        @Override
-        public Supplier<Map<LocalDate, Integer>> supplier() {
-            return HashMap::new;
-        }
-
-        @Override
-        public BiConsumer<Map<LocalDate, Integer>, UserMeal> accumulator() {
-            return (map, userMeal) ->
-            {
-                LocalDate date = userMeal.getDateTime().toLocalDate();
-                map.merge(date, userMeal.getCalories(), Integer::sum);
-            };
-        }
-
-        @Override
-        public BinaryOperator<Map<LocalDate, Integer>> combiner() {
-            return (l, r) -> {
-                l.forEach((key, value) -> r.merge(key, value, Integer::sum));
-                return r;
-            };
-        }
-
-        @Override
-        public Function<Map<LocalDate, Integer>, Map<LocalDate, Integer>> finisher() {
-            return s -> s;
-        }
-
-        @Override
-        public Set<Characteristics> characteristics() {
-            return Set.of(Characteristics.UNORDERED);
-        }
     }
 }
