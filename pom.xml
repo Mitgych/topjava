@@ -23,7 +23,7 @@
         <slf4j.version>2.0.3</slf4j.version>
 
         <!--DB-->
-        <postgresql.version>42.5.0</postgresql.version>
+        <postgresql.version>42.5.1</postgresql.version>
         <!--    Tests  -->
         <junit.version>4.13.2</junit.version>
     </properties>
@@ -72,6 +72,11 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
             <version>${spring.version}</version>
         </dependency>
 
